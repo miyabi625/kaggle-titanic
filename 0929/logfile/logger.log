@@ -1,0 +1,20 @@
+INFO:root:error outputting error desu
+INFO:root:warning was outputted
+INFO:root:info test test
+INFO:root:start read data
+INFO:root:end read data
+DEBUG:root:start read data
+DEBUG:root:end read data
+DEBUG : 2019-10-02 09:28:15,930 : start read data
+DEBUG : 2019-10-02 09:28:16,212 : end read data
+DEBUG : 2019-10-02 09:30:26,020 : start read data
+DEBUG : 2019-10-02 09:31:00,295 : start read data
+DEBUG : 2019-10-02 09:31:00,353 : acction
+DEBUG : 2019-10-02 09:31:00,497 : acction
+DEBUG : 2019-10-02 09:31:00,571 : end read data
+INFO : 2019-10-02 09:35:31,649 : start read data
+INFO : 2019-10-02 09:35:31,964 : end read data
+INFO : 2019-10-02 09:35:31,965 : start analysis
+INFO : 2019-10-02 09:35:33,018 : end analysis
+INFO : 2019-10-02 09:35:33,018 : start output data
+INFO : 2019-10-02 09:35:33,024 : end output data

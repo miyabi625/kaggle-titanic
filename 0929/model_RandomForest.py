@@ -1,4 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
+import logging
 
 class Model_RandomForest:
     # constructor

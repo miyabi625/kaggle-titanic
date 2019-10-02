@@ -1,4 +1,5 @@
 import csv as csv
+import logging
 
 class SubmitCsv:
     # constructor

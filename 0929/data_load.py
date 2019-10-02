@@ -1,11 +1,11 @@
 import pandas as pd
+import logging
 
 class DataLoad:
     # constructor
     def __init__(self, file_path):
         # Load training data
         tmp_df = pd.read_csv(file_path, header=0)
-        
         # Convert "Sex" to be a dummy variable (female = 0, Male = 1)
         tmp_df["Gender"] = tmp_df["Sex"].map({"female": 0, "male": 1}).astype(int)
         
