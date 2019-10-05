@@ -29,10 +29,11 @@ logging.info('end read data')
 # 分析
 ####################################################
 logging.info('start analysis')
-train_data = train_dl.getValues(["Survived","Pclass","Age","Gender"])
+train_data = train_dl.getValues(["Survived","Pclass","Age","Gender","SibSp","Parch","Fare","Cabin","Embarked_NUM"])
+print(train_data[1:4])
 
 ids = test_dl.getValues(["PassengerId"])
-test_data = test_dl.getValues(["Pclass","Age","Gender"])
+test_data = test_dl.getValues(["Pclass","Age","Gender","SibSp","Parch","Fare","Cabin","Embarked_NUM"])
 
 # Predict with "Random Forest"
 modelRF = model_RandomForest.Model_RandomForest()
