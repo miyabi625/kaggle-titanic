@@ -29,14 +29,24 @@ class DataLoad:
         #この項目には乳母が含まれていないとの事なので、１人では乗らないであろう15歳以下の0を1に変更する
         tmp_df.loc[(tmp_df["Age"] <= 15)&(tmp_df["Parch"] == 0), "Parch"] = 1
 
+        # Ticket数のカウント列
+        for TicketValue in set(tmp_df["Ticket"].values):
+            TicketCnt = (tmp_df["Ticket"] == TicketValue).sum()
+            tmp_df.loc[(tmp_df["Ticket"] == TicketValue), "TicketCnt"] = TicketCnt
+        
         # Fare（料金）
+        #料金がチケット数の合計（合算）になっているようなので、１人あたりの料金に割り戻す
+        tmp_df["Fare"] = tmp_df["Fare"] / tmp_df["TicketCnt"]
+        #料金＝0も欠損値として扱う
+        tmp_df.loc[tmp_df["Fare"] == 0, "Fare"] = None
+        #料金を割り戻した後に中央値を求める
         median_fare = tmp_df["Fare"].dropna().median()
+        #
         if len(tmp_df.Fare[tmp_df.Fare.isnull()]) > 0:
             #locを用いてFareの欠損値がある箇所に対して中央値を配置する
             tmp_df.loc[(tmp_df.Fare.isnull()), "Fare"] = median_fare
 
         # Cabin（客室番号）
-        #Cabinが存在する場合は一律「1」とする
         tmp_df.loc[(tmp_df.Cabin.notnull()), "Cabin"] = 1
         #Cabinの欠損値は「0」をセットする
         tmp_df.loc[(tmp_df.Cabin.isnull()), "Cabin"] = 0
