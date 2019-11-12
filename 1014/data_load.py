@@ -1,12 +1,14 @@
 import pandas as pd
 import numpy as np
 import logger
+import logging
 
 class DataLoad:
     ####################################################
     # ログ宣言
     ####################################################
-    log = logger.Logger('data_load.py')
+    log = logging.getLogger(__name__)
+    logger.setLogger(log)
 
     #定数宣言
     CABIN_FARE_SAMPLING = 10 #１Cabin当たりの料金の刻み幅

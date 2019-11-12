@@ -5,11 +5,14 @@ import data_load
 import model_RandomForest as model
 import submit_csv
 import logger
+import logging
+from tqdm import tqdm
 
 ####################################################
 # ログ宣言
 ####################################################
-log = logger.Logger('main.py')
+log = logging.getLogger(__name__)
+logger.setLogger(log)
 
 ####################################################
 # データ読み込み
@@ -27,53 +30,44 @@ log.info('end read data')
 ####################################################
 log.info('start analysis')
 
+### トレーニングデータ用意  ###################
 # 取得する項目を定義する
 getList = ["Pclass","Age","Gender","Honorific","SibSp","Parch","Team","Fare","CabinRank","Embarked_NUM"]
-
 # トレーニングデータを取得する
 train_data = train_dl.getValues(getList)
 train_data_Survived = train_dl.getValues(["Survived"])[0::, 0]
 
+### パラメータ定義  ##########################
+#param_grid = {"max_depth": [2,3, None],
+#      "n_estimators":[50,100,200,300,400,500],
+#      "max_features": [1, 3, 5, 7, 10],
+#      "min_samples_split": [2, 3, 10],
+#      "min_samples_leaf": [1, 3, 10],
+#      "bootstrap": [True, False],
+#      "criterion": ["gini", "entropy"]}
+
+param_grid = {'max_depth': [1, 5, 10, None],
+    'n_estimators': [100],
+    'max_features': [1, 'auto', None],
+    'min_samples_leaf': [1, 2, 4,]
+}
+
+### GridSearchCVインスタンス作成  ############
 # Predict with "Random Forest"
-modelRF = model.Model_RandomForest()
-# 特徴量の重要度を測定する
-fti = modelRF.feature_importances(getList,train_data, train_data_Survived)
+modelRF = model.Model_RandomForest(param_grid)
 
-# 特徴量の重要度の低い順から項目を削除し、最もスコアの高いリストを求める
-score = 0
-threshold = 0.00
-# 一つ前をキープ
-getList_fti_bef = []
-for i in range(11):
-    getList_fti = getList[:]
-    for t, arrval in enumerate(getList):
-        if fti[t] < threshold:
-            getList_fti.remove(arrval)
+### fit  ####################################
+tqdm(modelRF.fit(train_data, train_data_Survived))
 
-    if getList_fti == getList_fti_bef:
-        # 変更がない場合は後続処理をスキップする
-        threshold += 0.01
-        continue
+log.info('feature_importances')
+log.info(modelRF.grid_search_feature_importances())
+log.info('best_params')
+log.info(modelRF.grid_search_best_params())
+log.info('best_score')
+log.info(modelRF.grid_search_best_score())
 
-    train_data = train_dl.getValues(getList_fti)
-    
-    log.debug("list={}".format(getList_fti))
-    score_wk = modelRF.sk_fold(train_data, train_data_Survived)
-
-    if score < score_wk:
-        getList_fti_best = getList_fti
-        score = score_wk
-        log.info("score={} list={}".format(score,getList_fti_best))
-
-    getList_fti_bef = getList_fti[:]
-    threshold += 0.01
-
-train_data = train_dl.getValues(getList_fti_best)
-modelRF.fit(train_data, train_data_Survived)
-
-# テストデータに適用
-log.debug("list={}".format(getList_fti_best))
-test_data = test_dl.getValues(getList_fti_best)
+### テストデータに適用  #######################
+test_data = test_dl.getValues(getList)
 ids = test_dl.getValues(["PassengerId"])
 output = modelRF.predict(test_data)
 

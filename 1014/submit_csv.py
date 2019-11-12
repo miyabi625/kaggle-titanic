@@ -1,11 +1,13 @@
 import csv as csv
 import logger
+import logging
 
 class SubmitCsv:
     ####################################################
     # ログ宣言
     ####################################################
-    log = logger.Logger('submit_csv.py')
+    log = logging.getLogger(__name__)
+    logger.setLogger(log)
 
     # constructor
     def __init__(self, file_path):
