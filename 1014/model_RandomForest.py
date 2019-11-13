@@ -6,6 +6,7 @@ from sklearn.model_selection import GridSearchCV
 import logger
 import logging
 import numpy as np
+import pandas as pd
 
 class Model_RandomForest:
     ####################################################
@@ -16,7 +17,7 @@ class Model_RandomForest:
     
     # constructor
     def __init__(self,param):
-        self.model = GridSearchCV(RandomForestClassifier(random_state=0), param, cv=2,return_train_score=False)
+        self.model = GridSearchCV(RandomForestClassifier(random_state=0), param, cv=3, verbose=1,return_train_score=False)
 
     # 機械学習
     def fit(self,x_train,y_train):
@@ -26,8 +27,8 @@ class Model_RandomForest:
         self.log.info('fit end')
 
     # Best parameters
-    def grid_search_feature_importances(self):
-        return self.model.best_estimator_.feature_importances_
+    def grid_search_feature_importances(self,getList):
+        return pd.DataFrame({"feature":getList,"importance":self.model.best_estimator_.feature_importances_}).sort_values(by="importance",ascending=False)
 
     # Best parameters
     def grid_search_best_params(self):

@@ -6,7 +6,6 @@ import model_RandomForest as model
 import submit_csv
 import logger
 import logging
-from tqdm import tqdm
 
 ####################################################
 # ログ宣言
@@ -32,7 +31,7 @@ log.info('start analysis')
 
 ### トレーニングデータ用意  ###################
 # 取得する項目を定義する
-getList = ["Pclass","Age","Gender","Honorific","SibSp","Parch","Team","Fare","CabinRank","Embarked_NUM"]
+getList = ["Pclass","Age","Gender","Honorific","SibSp","Parch","Team","TravelAlone","SmallGroup","BigGroup","Fare","CabinRank","Embarked_NUM"]
 # トレーニングデータを取得する
 train_data = train_dl.getValues(getList)
 train_data_Survived = train_dl.getValues(["Survived"])[0::, 0]
@@ -46,10 +45,13 @@ train_data_Survived = train_dl.getValues(["Survived"])[0::, 0]
 #      "bootstrap": [True, False],
 #      "criterion": ["gini", "entropy"]}
 
-param_grid = {'max_depth': [1, 5, 10, None],
-    'n_estimators': [100],
-    'max_features': [1, 'auto', None],
-    'min_samples_leaf': [1, 2, 4,]
+param_grid = {'max_depth': [2,3,5,7,10, None],
+    'n_estimators': [50, 100],
+    'max_features': [7, 8, 9, 10, 11, 12, 'auto', None],
+    'min_samples_leaf': [2, 4, 6, 8, 10],
+    "min_samples_split": [2, 4, 6, 8, 10],
+    "bootstrap": [False],
+    "criterion": ["gini", "entropy"]
 }
 
 ### GridSearchCVインスタンス作成  ############
@@ -57,10 +59,10 @@ param_grid = {'max_depth': [1, 5, 10, None],
 modelRF = model.Model_RandomForest(param_grid)
 
 ### fit  ####################################
-tqdm(modelRF.fit(train_data, train_data_Survived))
+modelRF.fit(train_data, train_data_Survived)
 
 log.info('feature_importances')
-log.info(modelRF.grid_search_feature_importances())
+log.info(modelRF.grid_search_feature_importances(getList))
 log.info('best_params')
 log.info(modelRF.grid_search_best_params())
 log.info('best_score')

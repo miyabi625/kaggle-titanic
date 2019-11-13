@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import logger
 import logging
+from sklearn.preprocessing import LabelEncoder
 
 class DataLoad:
     ####################################################
@@ -15,8 +16,12 @@ class DataLoad:
     
     # constructor
     def __init__(self, file_path):
+        self.log.info('init start')
+
         # Load training data
         tmp_df = pd.read_csv(file_path, header=0)
+        #LabelEncoderのインスタンスを生成
+        le = LabelEncoder()
 
         #データ編集、データ補完
         # Sex（Gender）
@@ -25,24 +30,17 @@ class DataLoad:
 
         # honorific
         #名前に敬称が付いており、生存率に影響すると思われるため、敬称項目を追加する
-        tmp_df.loc[tmp_df["Name"].str.contains("Mr."), "Honorific"] = 1
-        tmp_df.loc[tmp_df["Name"].str.contains("Miss."), "Honorific"] = 2
-        tmp_df.loc[tmp_df["Name"].str.contains("Mrs."), "Honorific"] = 3
-        tmp_df.loc[tmp_df["Name"].str.contains("Master."), "Honorific"] = 4
-        tmp_df.loc[tmp_df["Name"].str.contains("Dr."), "Honorific"] = 5
-        tmp_df.loc[tmp_df["Name"].str.contains("Rev."), "Honorific"] = 6
-        tmp_df.loc[tmp_df["Name"].str.contains("Col."), "Honorific"] = 7
-        tmp_df.loc[tmp_df["Name"].str.contains("Major."), "Honorific"] = 8
-        tmp_df.loc[tmp_df["Name"].str.contains("Mlle."), "Honorific"] = 9
-        tmp_df.loc[tmp_df["Name"].str.contains("Capt."), "Honorific"] = 10
-        tmp_df.loc[tmp_df["Name"].str.contains("Don."), "Honorific"] = 11
-        tmp_df.loc[tmp_df["Name"].str.contains("Jonkheer."), "Honorific"] = 12
-        tmp_df.loc[tmp_df["Name"].str.contains("Lady."), "Honorific"] = 13
-        tmp_df.loc[tmp_df["Name"].str.contains("Mme."), "Honorific"] = 14
-        tmp_df.loc[tmp_df["Name"].str.contains("Ms."), "Honorific"] = 15
-        tmp_df.loc[tmp_df["Name"].str.contains("Sir."), "Honorific"] = 16
-        tmp_df.loc[tmp_df["Name"].str.contains("Countess."), "Honorific"] = 17
-        tmp_df.loc[tmp_df.Honorific.isnull(), "Honorific"] = 0
+        # カンマ区切りで分割
+        tmp_name = tmp_df['Name'].str.split(', |. ', expand=True)
+
+        # 列を追加
+        tmp_df['Honorific'] = tmp_name[1]
+        tmp_df.loc[tmp_df.Honorific.isnull(), "Honorific"] = "None"
+
+        #ラベルを覚えさせる
+        le = le.fit(tmp_df['Honorific'])
+        #ラベルを整数に変換
+        tmp_df['Honorific'] = le.transform(tmp_df['Honorific'])
 
         # Age
         #チケットクラスの購入年層は異なると思われるため、チケットクラス毎に中央値を算出する
@@ -73,6 +71,19 @@ class DataLoad:
         # SibSpとParchには自分が含まれていないので＋１する。チケット数と比較して大きい方をチームの人数とする
         tmp_df["Team"] = (tmp_df["SibSp"] + tmp_df["Parch"] + 1) 
         tmp_df.loc[tmp_df["Team"] < tmp_df["TicketCnt"], "Team"] = tmp_df["TicketCnt"]
+
+        # TravelAlone
+        #一人旅と少人数（8人未満）と大人数（8人以上）で生存率が異なるので、独立した項目を持たせる
+        tmp_df['TravelAlone'] = 0
+        tmp_df.loc[tmp_df["Team"] == 1, "TravelAlone"] = 1
+
+        # SmallGroup
+        tmp_df['SmallGroup'] = 0
+        tmp_df.loc[(tmp_df["Team"] > 1)&(tmp_df["Team"] < 8), "SmallGroup"] = 1
+
+        # BigGroup
+        tmp_df['BigGroup'] = 0
+        tmp_df.loc[tmp_df["Team"] >= 8, "BigGroup"] = 1
         
         # Fare（料金）
         #料金がチケット数の合計（合算）になっているようなので、１人あたりの料金に割り戻す
@@ -114,7 +125,7 @@ class DataLoad:
         for CabinFareValue in sorted(set(tmp_df["CabinFare"].values)):
             #1Cabin当たりの料金に対してのCabinRankの中央値を求める
             median_CabinRank = tmp_df[tmp_df["CabinFare"] == CabinFareValue]["CabinRank"].dropna().median()
-
+        
             # 取得不可（null値）の場合は一つ前のレベルで代用する
             if np.isnan(median_CabinRank):
                 median_CabinRank = before_median_CabinRank
@@ -133,6 +144,8 @@ class DataLoad:
 
 
         self.df = tmp_df
+
+        self.log.info('init end')
 
     # 該当項目の取得
     def getValues(self,param):
